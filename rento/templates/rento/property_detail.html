@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ property.title }} — Rento{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item active">{{ property.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- LEFT: Image & Details -->
+        <div class="col-lg-7">
+            <img src="{{ property.image.url }}" alt="{{ property.title }}" class="detail-image mb-4">
+
+            <div class="detail-card mb-4">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                    <div>
+                        <span class="badge rounded-pill mb-2" style="background:#EEF0FF;color:#6C63FF;font-weight:700">{{ property.property_type }}</span>
+                        {% if property.is_furnished %}
+                        <span class="badge rounded-pill ms-1" style="background:#dcfce7;color:#166534;font-weight:700"><i class="fas fa-couch me-1"></i>Furnished</span>
+                        {% endif %}
+                        <h2 class="fw-bold mt-1 mb-0">{{ property.title }}</h2>
+                        <p class="text-muted mb-0"><i class="fas fa-map-marker-alt me-1" style="color:#6C63FF"></i>{{ property.address }}, {{ property.city }}</p>
+                    </div>
+                    <div class="text-end">
+                        <div class="detail-price">PKR {{ property.price }}</div>
+                        <small class="text-muted">per month</small>
+                    </div>
+                </div>
+
+                <!-- Feature grid -->
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <i class="fas fa-bed"></i>
+                        <div>
+                            <span class="feat-label">Bedrooms</span>
+                            <span class="feat-val">{{ property.bedrooms }}</span>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-bath"></i>
+                        <div>
+                            <span class="feat-label">Bathrooms</span>
+                            <span class="feat-val">{{ property.bathrooms }}</span>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-vector-square"></i>
+                        <div>
+                            <span class="feat-label">Area</span>
+                            <span class="feat-val">{{ property.area_sqft }} sqft</span>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-circle" style="color:{% if property.status == 'available' %}#22c55e{% else %}#ef4444{% endif %}"></i>
+                        <div>
+                            <span class="feat-label">Status</span>
+                            <span class="feat-val">{{ property.status|title }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold mt-3 mb-2">About this Property</h5>
+                <p class="text-muted">{{ property.description }}</p>
+
+                <div class="d-flex align-items-center gap-3 mt-3">
+                    <small class="text-muted"><i class="fas fa-user me-1"></i>Listed by <strong>{{ property.owner.get_full_name|default:property.owner.username }}</strong></small>
+                    <small class="text-muted"><i class="fas fa-calendar me-1"></i>{{ property.created_at|date:"M d, Y" }}</small>
+                </div>
+            </div>
+
+            <!-- REVIEWS -->
+            <div class="detail-card">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-star me-2" style="color:#f59e0b"></i>Reviews</h5>
+                    {% if avg_rating %}
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fw-bold fs-5">{{ avg_rating|floatformat:1 }}</span>
+                        <div class="stars">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= avg_rating %}
+                                <i class="fas fa-star"></i>
+                                {% else %}
+                                <i class="far fa-star star-empty"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">({{ reviews|length }})</small>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% for review in reviews %}
+                <div class="review-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <strong>{{ review.user.get_full_name|default:review.user.username }}</strong>
+                            <small class="text-muted ms-2">{{ review.created_at|date:"M d, Y" }}</small>
+                        </div>
+                        <div class="stars">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %}<i class="fas fa-star fa-sm"></i>
+                                {% else %}<i class="far fa-star fa-sm star-empty"></i>{% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p class="mb-0 text-muted small">{{ review.comment }}</p>
+                </div>
+                {% empty %}
+                <p class="text-muted small">No reviews yet. Be the first to review!</p>
+                {% endfor %}
+
+                <!-- Post Review -->
+                {% if user.is_authenticated and not user_has_reviewed and user != property.owner %}
+                <hr>
+                <h6 class="fw-bold mb-3">Write a Review</h6>
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="review_submit" value="1">
+                    <div class="mb-2">{{ review_form.rating.label_tag }}{{ review_form.rating }}</div>
+                    <div class="mb-3">{{ review_form.comment.label_tag }}{{ review_form.comment }}</div>
+                    <button type="submit" class="btn btn-sm" style="background:#EEF0FF;color:#6C63FF;font-weight:700;border-radius:10px;padding:8px 20px">Post Review</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- RIGHT: Sidebar -->
+        <div class="col-lg-5">
+            <!-- INQUIRY FORM -->
+            <div class="detail-card mb-4" style="position: sticky; top: 90px;">
+                <h5 class="fw-bold mb-1"><i class="fas fa-envelope me-2" style="color:#6C63FF"></i>Contact Owner</h5>
+                <p class="text-muted small mb-3">Send a message and the owner will get back to you.</p>
+
+                {% if user.is_authenticated %}
+                    {% if user != property.owner %}
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="inquiry_submit" value="1">
+                        <div class="mb-3">
+                            <label class="form-label">Your Message</label>
+                            {{ inquiry_form.message }}
+                        </div>
+                        <button type="submit" class="btn btn-primary-custom">
+                            <i class="fas fa-paper-plane me-2"></i>Send Inquiry
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-info small"><i class="fas fa-info-circle me-1"></i>This is your own property.</div>
+                    {% endif %}
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-lock fa-2x mb-3" style="color:#cbd5e1"></i>
+                    <p class="text-muted small mb-3">Please login to contact the owner</p>
+                    <a href="{% url 'login' %}" class="btn btn-primary-custom">Login to Inquire</a>
+                </div>
+                {% endif %}
+
+                <hr>
+
+                <!-- Favorite -->
+                {% if user.is_authenticated and user != property.owner %}
+                <a href="{% url 'toggle_favorite' property.id %}" class="btn w-100 {% if is_favorite %}btn-danger{% else %}btn-outline-danger{% endif %} rounded-3">
+                    <i class="fas fa-heart me-2"></i>
+                    {% if is_favorite %}Remove from Favorites{% else %}Add to Favorites{% endif %}
+                </a>
+                {% endif %}
+
+                <!-- Owner options -->
+                {% if user == property.owner %}
+                <div class="d-flex gap-2 mt-3">
+                    <a href="{% url 'edit_property' property.id %}" class="btn btn-warning flex-fill rounded-3 fw-semibold"><i class="fas fa-edit me-1"></i>Edit</a>
+                    <a href="{% url 'delete_property' property.id %}" class="btn btn-danger flex-fill rounded-3 fw-semibold" onclick="return confirm('Delete this property?')"><i class="fas fa-trash me-1"></i>Delete</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

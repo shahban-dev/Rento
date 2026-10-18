@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Rento — Find Rooms, Houses & More in Pakistan{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="hero-section">
+    <div class="container text-center text-white position-relative">
+        <span class="badge-pill mb-3 d-inline-block">🏠 Pakistan's #1 Rental Platform</span>
+        <h1 class="mb-3">Find Your Perfect<br><span style="color:#c4b5fd">Rental Place</span></h1>
+        <p class="lead mb-4" style="color:rgba(255,255,255,0.8)">Browse thousands of rooms, houses, hostels & shops across Pakistan</p>
+        <div class="hero-stats d-flex justify-content-center gap-3 flex-wrap">
+            <div class="stat-item">
+                <div class="stat-num">{{ total_properties }}+</div>
+                <div class="stat-label">Properties Listed</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">{{ total_cities }}+</div>
+                <div class="stat-label">Cities Covered</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">100%</div>
+                <div class="stat-label">Free to Use</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SEARCH BOX -->
+<div class="container">
+    <div class="search-box">
+        <form method="GET">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold small text-muted"><i class="fas fa-search me-1"></i>Search Location / Title</label>
+                    <input type="text" name="search" class="form-control" placeholder="e.g. Lahore, Karachi, DHA..." value="{{ search }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold small text-muted"><i class="fas fa-th-large me-1"></i>Type</label>
+                    <select name="category" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="Room" {% if category == 'Room' %}selected{% endif %}>Room</option>
+                        <option value="House" {% if category == 'House' %}selected{% endif %}>House</option>
+                        <option value="Apartment" {% if category == 'Apartment' %}selected{% endif %}>Apartment</option>
+                        <option value="Hostel" {% if category == 'Hostel' %}selected{% endif %}>Hostel</option>
+                        <option value="Shop" {% if category == 'Shop' %}selected{% endif %}>Shop</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold small text-muted"><i class="fas fa-rupee-sign me-1"></i>Min Price (PKR)</label>
+                    <input type="number" name="min_price" class="form-control" placeholder="0" value="{{ min_price }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold small text-muted"><i class="fas fa-rupee-sign me-1"></i>Max Price (PKR)</label>
+                    <input type="number" name="max_price" class="form-control" placeholder="Any" value="{{ max_price }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-search w-100"><i class="fas fa-search me-2"></i>Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- PROPERTY LISTINGS -->
+<div class="container mt-5">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+        <div>
+            <h2 class="section-title mb-0">
+                {% if search or category %}Search Results{% else %}Latest Listings{% endif %}
+            </h2>
+            <p class="text-muted small mt-2 mb-0">
+                <strong>{{ properties|length }}</strong> propert{{ properties|length|pluralize:"y,ies" }} found
+            </p>
+        </div>
+        {% if search or category or min_price or max_price %}
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-sm rounded-pill">
+            <i class="fas fa-times me-1"></i>Clear Filters
+        </a>
+        {% endif %}
+    </div>
+
+    {% if properties %}
+    <div class="row g-4">
+        {% for property in properties %}
+        <div class="col-sm-6 col-lg-4">
+            <div class="property-card">
+                <div class="img-wrapper">
+                    <img src="{{ property.image.url }}" class="card-img-top" alt="{{ property.title }}">
+                    <span class="property-type-badge">{{ property.property_type }}</span>
+                    {% if property.status == 'available' %}
+                    <span class="status-badge-available">Available</span>
+                    {% else %}
+                    <span class="status-badge-rented">Rented</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <p class="prop-location mb-1"><i class="fas fa-map-marker-alt me-1" style="color:#6C63FF"></i>{{ property.city }}</p>
+                    <h5 class="prop-title">{{ property.title }}</h5>
+                    <div class="prop-features">
+                        {% if property.bedrooms %}
+                        <span class="prop-feat"><i class="fas fa-bed"></i>{{ property.bedrooms }} Bed</span>
+                        {% endif %}
+                        {% if property.bathrooms %}
+                        <span class="prop-feat"><i class="fas fa-bath"></i>{{ property.bathrooms }} Bath</span>
+                        {% endif %}
+                        {% if property.area_sqft %}
+                        <span class="prop-feat"><i class="fas fa-vector-square"></i>{{ property.area_sqft }} sqft</span>
+                        {% endif %}
+                        {% if property.is_furnished %}
+                        <span class="prop-feat"><i class="fas fa-couch"></i>Furnished</span>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="prop-price">PKR {{ property.price|floatformat:0 }}<span>/month</span></div>
+                        {% with reviews=property.reviews.all %}
+                        {% if reviews %}
+                        <div class="small text-warning"><i class="fas fa-star"></i> {{ reviews|length }}</div>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                    <a href="{% url 'property_detail' property.id %}" class="btn-view-details">
+                        View Details <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="no-results">
+        <i class="fas fa-search-minus d-block"></i>
+        <h4 class="mt-3 fw-bold">No Properties Found</h4>
+        <p class="empty-state-text">Try adjusting your search filters or <a href="{% url 'home' %}">browse all listings</a>.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- PROPERTY TYPE QUICK LINKS -->
+<div class="container mt-5 mb-5">
+    <h2 class="section-title mb-4">Browse by Type</h2>
+    <div class="row g-3">
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="?category=Room" class="d-block text-center p-4 rounded-3 text-decoration-none" style="background:#EEF0FF;transition:all .3s" onmouseover="this.style.background='#6C63FF';this.style.color='#fff'" onmouseout="this.style.background='#EEF0FF';this.style.color=''">
+                <i class="fas fa-door-open fa-2x mb-2" style="color:#6C63FF"></i>
+                <div class="fw-bold small">Room</div>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="?category=House" class="d-block text-center p-4 rounded-3 text-decoration-none" style="background:#dcfce7;transition:all .3s" onmouseover="this.style.background='#22c55e';this.style.color='#fff'" onmouseout="this.style.background='#dcfce7';this.style.color=''">
+                <i class="fas fa-home fa-2x mb-2" style="color:#22c55e"></i>
+                <div class="fw-bold small">House</div>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="?category=Apartment" class="d-block text-center p-4 rounded-3 text-decoration-none" style="background:#fef3c7;transition:all .3s" onmouseover="this.style.background='#f59e0b';this.style.color='#fff'" onmouseout="this.style.background='#fef3c7';this.style.color=''">
+                <i class="fas fa-building fa-2x mb-2" style="color:#f59e0b"></i>
+                <div class="fw-bold small">Apartment</div>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="?category=Hostel" class="d-block text-center p-4 rounded-3 text-decoration-none" style="background:#fce7f3;transition:all .3s" onmouseover="this.style.background='#ec4899';this.style.color='#fff'" onmouseout="this.style.background='#fce7f3';this.style.color=''">
+                <i class="fas fa-bed fa-2x mb-2" style="color:#ec4899"></i>
+                <div class="fw-bold small">Hostel</div>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="?category=Shop" class="d-block text-center p-4 rounded-3 text-decoration-none" style="background:#cffafe;transition:all .3s" onmouseover="this.style.background='#06b6d4';this.style.color='#fff'" onmouseout="this.style.background='#cffafe';this.style.color=''">
+                <i class="fas fa-store fa-2x mb-2" style="color:#06b6d4"></i>
+                <div class="fw-bold small">Shop</div>
+            </a>
+        </div>
+        {% if not user.is_authenticated %}
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="{% url 'register' %}" class="d-block text-center p-4 rounded-3 text-decoration-none" style="background:#f3e8ff;transition:all .3s" onmouseover="this.style.background='#a855f7';this.style.color='#fff'" onmouseout="this.style.background='#f3e8ff';this.style.color=''">
+                <i class="fas fa-plus-circle fa-2x mb-2" style="color:#a855f7"></i>
+                <div class="fw-bold small">List Yours</div>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

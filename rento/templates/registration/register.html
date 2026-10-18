@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Sign Up — Rento{% endblock %}
+
+{% block content %}
+<div class="container" style="padding:40px 15px">
+    <div style="max-width:540px;margin:0 auto">
+        <div class="text-center mb-4">
+            <div style="font-size:2.5rem;margin-bottom:8px">✨</div>
+            <h2 class="fw-bold" style="color:#1e1b4b">Create Account</h2>
+            <p class="text-muted">Join thousands of users on Rento</p>
+        </div>
+
+        <div class="auth-card">
+            <form method="POST" novalidate>
+                {% csrf_token %}
+
+                <!-- Role selector -->
+                <div class="mb-4">
+                    <label class="form-label">I want to</label>
+                    <div class="d-flex gap-3">
+                        <label class="flex-fill" style="cursor:pointer">
+                            <input type="radio" name="role" value="tenant" checked style="display:none" id="r_tenant">
+                            <div id="lbl_tenant" onclick="selectRole('tenant')" style="border:2px solid #6C63FF;border-radius:12px;padding:12px;text-align:center;background:#EEF0FF;transition:all .2s">
+                                <i class="fas fa-search fa-lg mb-1" style="color:#6C63FF"></i>
+                                <div class="fw-bold small" style="color:#6C63FF">Find Property</div>
+                            </div>
+                        </label>
+                        <label class="flex-fill" style="cursor:pointer">
+                            <input type="radio" name="role" value="owner" style="display:none" id="r_owner">
+                            <div id="lbl_owner" onclick="selectRole('owner')" style="border:2px solid #e2e8f0;border-radius:12px;padding:12px;text-align:center;background:#fff;transition:all .2s">
+                                <i class="fas fa-home fa-lg mb-1" style="color:#94a3b8"></i>
+                                <div class="fw-bold small" style="color:#94a3b8">List Property</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    {% for field in form %}
+                    <div class="{% if field.name == 'username' or field.name == 'email' %}col-12{% else %}col-md-6{% endif %}">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                        {% endif %}
+                        {% if field.help_text %}
+                        <div class="text-muted" style="font-size:0.75rem;margin-top:4px">{{ field.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    <div class="col-12">
+                        <label class="form-label">Phone Number (Optional)</label>
+                        <input type="tel" name="phone" class="form-control" placeholder="+92 300 0000000">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary-custom mt-4">
+                    <i class="fas fa-user-plus me-2"></i>Create Account
+                </button>
+            </form>
+            <p class="text-center text-muted small mt-4 mb-0">
+                Already have an account? <a href="{% url 'login' %}" class="fw-semibold" style="color:#6C63FF">Login here</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+function selectRole(role) {
+    ['tenant','owner'].forEach(r => {
+        const lbl = document.getElementById('lbl_' + r);
+        const inp = document.getElementById('r_' + r);
+        if (r === role) {
+            lbl.style.borderColor = '#6C63FF';
+            lbl.style.background = '#EEF0FF';
+            lbl.querySelector('i').style.color = '#6C63FF';
+            lbl.querySelector('div').style.color = '#6C63FF';
+            inp.checked = true;
+        } else {
+            lbl.style.borderColor = '#e2e8f0';
+            lbl.style.background = '#fff';
+            lbl.querySelector('i').style.color = '#94a3b8';
+            lbl.querySelector('div').style.color = '#94a3b8';
+        }
+    });
+}
+</script>
+{% endblock %}
